@@ -13,4 +13,45 @@ read -p "What email do you use for GitHub?
 : " email
 
 
-#ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa <<<y >/dev/null 2>&1
+ssh-keygen -q -t rsa -N '$email' -f ~/.ssh/id_rsa <<<y >/dev/null 2>&1
+
+if [ "$?" -ne 0 ]; then
+  # If ssh-keygen doesn't work exit
+  echo "ssh-keygen did not work as expected"
+  exit 1
+fi
+
+eval "$(ssh-agent -s)"
+
+if [ -f ~/.ssh/config ]; then
+  :
+else
+  echo "Host *.github.com\nAddKeysToAgent yes\nIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+fi
+ssh-add ~/.ssh/id_rsa
+
+
+read -p "What is the name of this key?
+: " keyName
+
+
+#Check if Github CLI is installed
+if command -v gh &> /dev/null; then
+  # GitHub CLI is installed
+  echo "GitHub CLI is installed"
+else
+  # GitHub CLI is not installed
+  echo "GitHub CLI is not installed"
+  read -p "Do you want to install Github CLI (y/n)?
+Otherwise you will need to add the Github key manually by going to your Github account,press 'Settings' under the profile icon, p  ress on 'SSH and GPG keys', press 'New SSH key', then add 'Title','Key type', and paste the public ssh key. To copy the ssh key    to clipboard, run 'pbcopy < ~/.ssh/id_rsa.pub'
+: " -n 1 -r
+
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    brew install gh
+  else
+    echo "RSA public key needs to be manually added to GitHub"
+    exit 0
+  fi
+fi
+#Add the public ssh-key
+ gh ssh-key add ~/.ssh/id_rsa.pub  --title "$keyName"
