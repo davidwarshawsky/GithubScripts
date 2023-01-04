@@ -26,10 +26,9 @@ eval "$(ssh-agent -s)"
 if [ -f ~/.ssh/config ]; then
   :
 else
-  echo "Host *.github.com\nAddKeysToAgent yes\nIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+  echo "Host *.github.com\nIgnoreUnknown UseKeychain\n  AddKeysToAgent yes\n  IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
 fi
 ssh-add ~/.ssh/id_rsa
-
 
 read -p "What is the name of this key?
 : " keyName
